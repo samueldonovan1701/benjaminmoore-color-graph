@@ -185,8 +185,6 @@ export class BranchNode extends Node {
     }
 
     expand(add_nodes=true) {
-        super.expand();
-
         let r = [];
         this.colors.forEach((color_id) => {
             if(!add_nodes) {
@@ -199,11 +197,13 @@ export class BranchNode extends Node {
                 }
                 else {
                     this.graph.addLink(this.id, color_id);
+                    super.expand();
                 }
             }
             else {
                 this.graph.addLink(this.id, color_id);
                 r.push(new ColorNode(this.graph, color_id));
+                super.expand();
             }
         });
         return r;
