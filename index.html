@@ -12,16 +12,16 @@
     <div id="graph-container"></div>
     <script type="module">
         import {ColorGraph, ColorNode} from "./scripts/graph.js";
-        
         (async function() {
             const colors = await fetch("./data/final_colors.min.json").then(r => r.json());
             const groups = await fetch("./data/groups.min.json").then(r => r.json());
             
-            let graph = new ColorGraph("graph-container", colors, groups);
+            window.graph = new ColorGraph("graph-container", colors, groups);
         
         
-            graph.showColor("HC-6");
-            //graph.showCollection("Historical");
+            //window.graph.showColor("HC-6");
+            window.graph.showGroup("Historical", "A");
+            //window.graph.showGroup("Blue", "shades");
         }());
     </script>
 </body>

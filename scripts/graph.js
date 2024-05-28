@@ -74,7 +74,7 @@ class Node {
 }
 export class ColorNode extends Node {
     constructor(graph, id) {
-        return super(graph, id, graph.get_color(id));
+        return super(graph, id, graph.getColorData(id));
     }
     render() {
         let g = Viva.Graph.svg("g");
@@ -121,7 +121,7 @@ export class ColorNode extends Node {
 }
 export class BranchNode extends Node {
     constructor(graph, color_id, branch_name) {
-        let color = graph.get_color(color_id);
+        let color = graph.getColorData(color_id);
         if(!color.branches.hasOwnProperty(branch_name)) {
             throw `No such branch ${branch_name} in ${color_id}`;
         }
@@ -152,7 +152,7 @@ export class BranchNode extends Node {
             throw `${this.id} has no colors`;
         }
         else if(this.colors.length == 1) {
-            shape.attr("fill", this.graph.get_color(this.colors[0]).hex);
+            shape.attr("fill", this.graph.getColorData(this.colors[0]).hex);
         }
         else {
             //Linear gradient
@@ -163,7 +163,7 @@ export class BranchNode extends Node {
             this.colors.forEach((color_id,i) => {
                 fillgradient.append("stop")
                             .attr("offset", (offset_step*(i+1))+"%")
-                            .attr("stop-color", this.graph.get_color(color_id).hex);
+                            .attr("stop-color", this.graph.getColorData(color_id).hex);
             });
             
             shape.attr("fill", `url(#${fillgradient_id})`)
@@ -184,13 +184,28 @@ export class BranchNode extends Node {
         return super.render(g);
     }
 
-    expand() {
+    expand(add_nodes=true) {
+        super.expand();
+
         let r = [];
         this.colors.forEach((color_id) => {
-            this.graph.addLink(this.id, color_id);
-            r.push(new ColorNode(this.graph, color_id));
+            if(!add_nodes) {
+                let node = this.graph.getNode(color_id);
+                if(node === undefined) {
+                    return;
+                }
+                else if(node.links.length > 2) {
+                    return;
+                }
+                else {
+                    this.graph.addLink(this.id, color_id);
+                }
+            }
+            else {
+                this.graph.addLink(this.id, color_id);
+                r.push(new ColorNode(this.graph, color_id));
+            }
         });
-        super.expand();
         return r;
     }
 }
@@ -300,54 +315,9 @@ export class ColorGraph{
         }
     }
 
-    showCollection(name, expand=null) {
-        this.#graph.beginUpdate();
-        this.#graph.clear();
-
-        let group = this.get_group(name);
-        group.colors.forEach(color => {
-            let node = this.getNode(color);
-            if(!node)
-                node = new ColorNode(this, color);
-            if(expand !== null) {
-                let branches = node.data.expand(expand);
-                branches.forEach(branch => {
-                    branch.data.expand();
-                });
-            }
-        });
-        
-        if(expand !== null) {
-            this.#graph.forEachNode(node => {
-                if(node.links === null)
-                    node.data.expand();
-            });
-        }
-
-        this.#graph.endUpdate();
-
-    }
-    showColor(color) {
-        this.#graph.beginUpdate();
-        this.#graph.clear();
-
-        color = new ColorNode(this, color);
-
-        Object.entries(color.data.r_branches).forEach(([k,v]) => {
-            v.forEach(branch => {
-                if(branch !== "similar" && branch !== "shades") {
-                    let other = new ColorNode(this, k);
-                    console.log(branch);
-                    other.data.expand(branch)[0]
-                        .data.expand();
-                }
-            });
-        });
-        
-        this.#graph.endUpdate();
-    }
-
-    get_color(id) {
+    
+    
+    getColorData(id) {
         if(!this.colors.hasOwnProperty(id)) {
             throw `No such color ${id}`;
         }
@@ -355,7 +325,30 @@ export class ColorGraph{
             return this.colors[id];
         }
     }
-    get_group(id) {
+    showColor(color) {
+        return new ColorNode(this, color);
+    }
+    showColorSolo(color) {
+        this.#graph.beginUpdate();
+        this.#graph.clear();
+
+        color = new ColorNode(this, color);
+
+        Object.entries(color.data.r_branches).forEach(([k,v]) => {
+            v.forEach(branch_name => {
+                if(branch_name !== "similar" && branch_name !== "shades") {
+                    let other = new ColorNode(this, k);
+                    let branch = other.data.expand(branch_name)[0];
+                    branch.data.expand();
+                    other.data.is_collapsed = false;
+                }
+            });
+        });
+        
+        this.#graph.endUpdate();
+    }
+
+    getGroup(id) {
         for(let category in this.groups) {
             for(let group in this.groups[category]) {
                 if(group === id) {
@@ -364,5 +357,26 @@ export class ColorGraph{
             }
         }
         throw `No such group ${id}`;
+    }
+    showGroup(name, expand=null) {
+        this.#graph.beginUpdate();
+        this.#graph.clear();
+
+        let group = this.getGroup(name);
+        group.colors.forEach(color => {
+            let node = this.getNode(color);
+            if(!node) {
+                node = new ColorNode(this, color);
+            }
+
+            if(expand) {
+                let branch = node.data.expand(expand)[0];
+                if(branch !== undefined) {
+                    branch.data.expand(false);
+                }
+            }
+        });
+        
+        this.#graph.endUpdate();
     }
 };
