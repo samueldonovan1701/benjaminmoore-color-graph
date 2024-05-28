@@ -358,7 +358,7 @@ export class ColorGraph{
         }
         throw `No such group ${id}`;
     }
-    showGroup(name, expand=null) {
+    showGroup(name, ...expand) {
         this.#graph.beginUpdate();
         this.#graph.clear();
 
@@ -369,12 +369,12 @@ export class ColorGraph{
                 node = new ColorNode(this, color);
             }
 
-            if(expand) {
-                let branch = node.data.expand(expand)[0];
+            expand.forEach(branch_name => {
+                let branch = node.data.expand(branch_name)[0];
                 if(branch !== undefined) {
                     branch.data.expand(false);
                 }
-            }
+            });
         });
         
         this.#graph.endUpdate();
