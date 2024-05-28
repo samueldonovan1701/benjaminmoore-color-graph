@@ -1,0 +1,22 @@
+
+
+.color-graph {
+    display: block;
+    width: 100%;
+    height: 100vh;
+    background-color: lightblue;
+}
+
+.color-graph circle {
+    stroke: black;
+    stroke-width: 1px;
+}
+.color-graph text {
+    font-weight: bold;
+}
+.colornode.dark text {
+    fill: white;
+}
+.colornode.light text {
+    fill: black;
+}
