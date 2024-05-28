@@ -217,6 +217,9 @@ export class ColorGraph{
                         "branch_name": ["colorA", "colorB", ...],
                         ...
                     },
+                    "r_branches": {
+                        "color_id": ["branch_name", ...]
+                    }
                     ....
                 }
             }
@@ -297,8 +300,9 @@ export class ColorGraph{
         }
     }
 
-    addCollection(name, expand=null) {
+    showCollection(name, expand=null) {
         this.#graph.beginUpdate();
+        this.#graph.clear();
 
         let group = this.get_group(name);
         group.colors.forEach(color => {
@@ -323,6 +327,25 @@ export class ColorGraph{
         this.#graph.endUpdate();
 
     }
+    showColor(color) {
+        this.#graph.beginUpdate();
+        this.#graph.clear();
+
+        color = new ColorNode(this, color);
+
+        Object.entries(color.data.r_branches).forEach(([k,v]) => {
+            v.forEach(branch => {
+                if(branch !== "similar" && branch !== "shades") {
+                    let other = new ColorNode(this, k);
+                    console.log(branch);
+                    other.data.expand(branch)[0]
+                        .data.expand();
+                }
+            });
+        });
+        
+        this.#graph.endUpdate();
+    }
 
     get_color(id) {
         if(!this.colors.hasOwnProperty(id)) {
@@ -332,7 +355,6 @@ export class ColorGraph{
             return this.colors[id];
         }
     }
-
     get_group(id) {
         for(let category in this.groups) {
             for(let group in this.groups[category]) {

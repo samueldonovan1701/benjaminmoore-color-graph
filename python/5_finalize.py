@@ -24,7 +24,6 @@ def resolve_links(color):
         
     return color
 
-
 final_colors = dict()
 for id,color in colors.items():
     color = color.copy()
@@ -37,7 +36,6 @@ for id,color in colors.items():
 
     if(len(color["similar"]) > 0):
         color["branches"]["similar"] = color["similar"]
-
     
     for m,match in enumerate(color["matching"]):
         if(len(match) > 0):
@@ -52,8 +50,17 @@ for id,color in colors.items():
     del color["similar"]
     del color["shades"]
 
-
     final_colors[id] = color
+
+print("Finding reverse links....")
+for id, color in final_colors.items():
+    color["r_branches"] = {}
+    for other_id, other in final_colors.items():
+        for branch_name, branch in other["branches"].items():
+            if id in branch:
+                if other_id not in color["r_branches"]:
+                    color["r_branches"][other_id] = []
+                color["r_branches"][other_id].append(branch_name)
 
 
 print("Writing to final_colors.json")
